@@ -1,0 +1,613 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>CleanSA — Let's Keep South Africa Clean</title>
+<meta name="description" content="CleanSA is a community-powered platform for reporting, mapping and tracking litter and illegal dumping across South Africa." />
+
+<!-- Fonts -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@500;600;700;800&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+
+<!-- Icons -->
+<script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js" defer></script>
+
+<!-- Leaflet (mapping) -->
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" defer></script>
+
+<!-- Chart.js (analytics charts) + jsPDF (PDF report generation) -->
+<script src="https://unpkg.com/chart.js@4.4.4/dist/chart.umd.js" defer></script>
+<script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js" defer></script>
+
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+<a class="skip-link" href="#main">Skip to content</a>
+
+<!-- ============ NAVBAR ============ -->
+<header class="navbar" id="navbar">
+  <div class="navbar-inner">
+    <a href="#top" class="brand" aria-label="CleanSA home">
+      <span class="brand-mark" aria-hidden="true">
+        <svg viewBox="0 0 40 40" width="34" height="34">
+          <path d="M20 3C11 3 4 10 4 19c0 11 12 17 16 18.6 4-1.6 16-7.6 16-18.6C36 10 29 3 20 3Z" fill="var(--forest)"/>
+          <path d="M20 8c-4.5 3-7 7.5-7 12.5 0 3.6 1.4 6.6 3.6 8.7-.3-3 .3-6.6 2.6-9.7 1.6-2.1 1.6-5 .3-7.6 2 1.4 3.2 3.9 3.1 6.6 2.6-2.3 3.9-5.7 3.5-9-1.9.2-3.9.9-5.4 2.2Z" fill="var(--leaf)"/>
+        </svg>
+      </span>
+      <span class="brand-name">Clean<span class="brand-accent">SA</span></span>
+    </a>
+
+    <nav class="nav-links" id="navLinks" aria-label="Primary">
+      <a href="#hero">Home</a>
+      <a href="#map-section">Explore Map</a>
+      <a href="#reports-section">Reports</a>
+      <a href="#dashboard">Dashboard</a>
+      <a href="#report-builder">Analytics</a>
+      <a href="#about">About</a>
+    </nav>
+
+    <div class="navbar-actions">
+      <button class="btn btn-ghost btn-sm" id="signInBtn" title="Accounts &amp; roles are a planned future feature">
+        <i data-lucide="user" aria-hidden="true"></i>
+        <span>Sign in</span>
+      </button>
+      <button class="btn btn-primary btn-sm" id="navReportBtn">
+        <i data-lucide="plus" aria-hidden="true"></i>
+        <span>Report Litter</span>
+      </button>
+      <button class="hamburger" id="hamburgerBtn" aria-label="Open menu" aria-expanded="false" aria-controls="mobileMenu">
+        <i data-lucide="menu" aria-hidden="true"></i>
+      </button>
+    </div>
+  </div>
+
+  <div class="mobile-menu" id="mobileMenu" hidden>
+    <a href="#hero">Home</a>
+    <a href="#map-section">Explore Map</a>
+    <a href="#reports-section">Reports</a>
+    <a href="#dashboard">Dashboard</a>
+    <a href="#report-builder">Analytics</a>
+    <a href="#about">About</a>
+    <button class="btn btn-secondary" id="mobileSignInBtn">
+      <i data-lucide="user" aria-hidden="true"></i> Sign in
+    </button>
+    <button class="btn btn-primary" id="mobileReportBtn">
+      <i data-lucide="plus" aria-hidden="true"></i> Report Litter
+    </button>
+  </div>
+</header>
+
+<main id="main">
+
+  <!-- ============ HERO ============ -->
+  <section class="hero" id="hero">
+    <div class="hero-inner">
+      <div class="hero-copy">
+        <p class="hero-kicker">A community environmental reporting project</p>
+        <h1>Let's keep South Africa clean.</h1>
+        <p class="hero-sub">Report litter. Discover problem areas. Track cleanup efforts. Together, we can build a clearer picture of where our communities need help — and see it through to a resolved site.</p>
+        <div class="hero-actions">
+          <button class="btn btn-primary btn-lg" id="heroReportBtn">
+            <i data-lucide="camera" aria-hidden="true"></i>
+            Report Litter
+          </button>
+          <button class="btn btn-secondary btn-lg" id="heroExploreBtn">
+            <i data-lucide="map" aria-hidden="true"></i>
+            Explore Map
+          </button>
+        </div>
+        <p class="hero-note"><i data-lucide="info" aria-hidden="true"></i> This is a prototype. Sample reports are demo data, not verified real-world incidents.</p>
+      </div>
+
+      <div class="hero-visual" aria-hidden="true">
+        <div class="hero-map-card">
+          <svg class="sa-outline" viewBox="0 0 400 340" xmlns="http://www.w3.org/2000/svg">
+            <path d="M55 90 L120 55 L190 45 L250 55 L300 40 L350 70 L365 120 L340 160 L355 200 L320 245 L270 270 L230 300 L180 305 L140 285 L95 260 L60 220 L40 170 L45 130 Z" fill="var(--leaf-10)" stroke="var(--leaf)" stroke-width="2"/>
+          </svg>
+          <span class="pin pin-1"><span class="pin-dot pin-critical"></span></span>
+          <span class="pin pin-2"><span class="pin-dot pin-verified"></span></span>
+          <span class="pin pin-3"><span class="pin-dot pin-reported"></span></span>
+          <span class="pin pin-4"><span class="pin-dot pin-resolved"></span></span>
+          <span class="pin pin-5"><span class="pin-dot pin-verified"></span></span>
+        </div>
+        <div class="floating-chip chip-1">
+          <i data-lucide="trending-up" aria-hidden="true"></i>
+          <div><strong id="chipReports">—</strong><span>reports this month</span></div>
+        </div>
+        <div class="floating-chip chip-2">
+          <i data-lucide="badge-check" aria-hidden="true"></i>
+          <div><strong id="chipVerified">—</strong><span>verified locations</span></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ STATS ============ -->
+  <section class="stats-band" aria-label="Platform statistics">
+    <div class="stats-inner" id="statsGrid">
+      <!-- injected by JS -->
+    </div>
+  </section>
+
+  <!-- ============ MAP SECTION ============ -->
+  <section class="map-section" id="map-section">
+    <div class="section-inner">
+      <div class="section-heading">
+        <h2>Litter Map</h2>
+        <p>Every marker is a reported location. Click one to see the full picture — photo, description, status and how it's being handled.</p>
+      </div>
+
+      <div class="map-toolbar">
+        <div class="search-field">
+          <i data-lucide="search" aria-hidden="true"></i>
+          <input type="search" id="searchInput" placeholder="Search South Africa for litter reports — city, province, waste type…" aria-label="Search reports" />
+        </div>
+
+        <div class="toolbar-filters">
+          <select id="filterProvince" aria-label="Filter by province">
+            <option value="all">All provinces</option>
+          </select>
+          <select id="filterStatus" aria-label="Filter by status">
+            <option value="all">All statuses</option>
+            <option value="Reported">Reported</option>
+            <option value="Verified">Verified</option>
+            <option value="Cleanup In Progress">Cleanup In Progress</option>
+            <option value="Resolved">Resolved</option>
+          </select>
+          <select id="filterSeverity" aria-label="Filter by severity">
+            <option value="all">All severities</option>
+            <option value="Low">Low</option>
+            <option value="Medium">Medium</option>
+            <option value="High">High</option>
+            <option value="Critical">Critical</option>
+          </select>
+          <select id="filterSource" aria-label="Filter by source">
+            <option value="all">All sources</option>
+            <option value="Community Report">Community</option>
+            <option value="Public News">Public News</option>
+            <option value="Organisation">Organisation</option>
+            <option value="Municipality">Municipality</option>
+          </select>
+          <button class="btn btn-ghost btn-sm" id="resetFiltersBtn" type="button">
+            <i data-lucide="rotate-ccw" aria-hidden="true"></i> Reset
+          </button>
+        </div>
+      </div>
+
+      <div class="map-layout">
+        <div class="map-container">
+          <div id="leafletMap" role="application" aria-label="Interactive map of litter reports across South Africa"></div>
+          <div class="map-loading" id="mapLoading">
+            <div class="spinner" aria-hidden="true"></div>
+            <span>Loading map…</span>
+          </div>
+          <div class="map-legend" aria-label="Marker legend">
+            <span><i class="legend-dot legend-reported"></i>Reported</span>
+            <span><i class="legend-dot legend-verified"></i>Verified</span>
+            <span><i class="legend-dot legend-progress"></i>In progress</span>
+            <span><i class="legend-dot legend-resolved"></i>Resolved</span>
+            <span><i class="legend-dot legend-critical"></i>Critical</span>
+          </div>
+          <div class="map-locate">
+            <button class="btn btn-surface btn-icon" id="locateBtn" title="Use my location" aria-label="Use my location">
+              <i data-lucide="locate-fixed" aria-hidden="true"></i>
+            </button>
+            <button class="btn btn-surface btn-icon" id="hotspotToggleBtn" title="Toggle environmental hotspots" aria-label="Toggle environmental hotspots" aria-pressed="false">
+              <i data-lucide="flame" aria-hidden="true"></i>
+            </button>
+          </div>
+        </div>
+
+        <aside class="map-side">
+          <h3>Quick summary</h3>
+          <div class="mini-stats" id="miniStats"></div>
+          <h3>Most reported province</h3>
+          <p class="mini-highlight" id="topProvince">—</p>
+          <h3>Most common waste type</h3>
+          <p class="mini-highlight" id="topWasteType">—</p>
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ REPORT CARDS ============ -->
+  <section class="reports-section" id="reports-section">
+    <div class="section-inner">
+      <div class="section-heading">
+        <h2>Recent reports</h2>
+        <p>Community submissions and aggregated public information, side by side. Verification status is always shown clearly.</p>
+      </div>
+
+      <div class="reports-grid" id="reportsGrid" aria-live="polite">
+        <!-- injected by JS -->
+      </div>
+
+      <div class="empty-state" id="emptyState" hidden>
+        <i data-lucide="map-pin-x" aria-hidden="true"></i>
+        <h3>No reports found in this area.</h3>
+        <p>Try another location or search term — or be the first to report one.</p>
+        <button class="btn btn-primary" id="emptyReportBtn">
+          <i data-lucide="plus" aria-hidden="true"></i> Report Litter
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ DASHBOARD ============ -->
+  <section class="dashboard-section" id="dashboard">
+    <div class="section-inner">
+      <div class="section-heading">
+        <h2>Environmental dashboard</h2>
+        <p>Aggregate intelligence computed live from every report currently loaded — hotspots, trends, CleanScore, and cleanup impact.</p>
+      </div>
+
+      <div class="kpi-grid" id="dashboardKpis"><!-- injected --></div>
+
+      <div class="dashboard-charts">
+        <div class="chart-panel"><canvas id="dashTrendChart"></canvas></div>
+        <div class="chart-panel"><canvas id="dashProvinceChart"></canvas></div>
+      </div>
+
+      <div class="dashboard-grid">
+        <div class="hotspot-panel">
+          <h3>Environmental hotspots</h3>
+          <p class="hint">Locations with repeated or high-severity reports, ranked by CleanScore. Toggle them on the map above.</p>
+          <div class="hotspot-table-wrap">
+            <table class="hotspot-table" id="hotspotTable">
+              <thead>
+                <tr><th>Location</th><th>CleanScore</th><th>Risk</th><th>Reports</th><th>Resolved</th><th>Top waste type</th><th>Trend</th></tr>
+              </thead>
+              <tbody id="hotspotTableBody"></tbody>
+            </table>
+          </div>
+          <p class="empty-hint" id="hotspotEmptyHint" hidden>No hotspots yet — a location needs 2 or more reports to appear here.</p>
+        </div>
+
+        <div class="methodology-box">
+          <h3>How CleanScore works</h3>
+          <p>CleanScore (0–100) estimates environmental pressure at a location from data already in the system — it is a transparent formula, not a prediction.</p>
+          <ul>
+            <li><strong>Severity (35%)</strong> — average severity of reports at that location.</li>
+            <li><strong>Persistence (25%)</strong> — share of reports still unresolved.</li>
+            <li><strong>Volume (25%)</strong> — number of reports, capped at 6+.</li>
+            <li><strong>Age (15%)</strong> — how long unresolved reports have been outstanding, capped at 45 days.</li>
+          </ul>
+          <p class="hint">Risk bands: 0–24 Low · 25–49 Moderate · 50–74 High · 75–100 Critical. Verification status affects confidence in the data, not the score itself.</p>
+        </div>
+      </div>
+
+      <div class="impact-panel">
+        <h3>Environmental impact</h3>
+        <p class="hint">Totals only include reports with recorded cleanup impact — this prototype does not estimate or invent figures for the rest.</p>
+        <div class="impact-kpi-grid" id="impactKpis"><!-- injected --></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ANALYTICS & REPORT BUILDER ============ -->
+  <section class="builder-section" id="report-builder">
+    <div class="section-inner">
+      <div class="section-heading">
+        <h2>Analytics &amp; reports</h2>
+        <p>Build a professional PDF from live report data. Choose a scope, pick what to include, preview the numbers, then generate a document you can share.</p>
+      </div>
+
+      <div class="builder-layout">
+
+        <!-- Controls -->
+        <div class="builder-panel">
+
+          <h3 class="builder-label">1. Report type</h3>
+          <div class="report-type-grid" id="reportTypeGrid" role="radiogroup" aria-label="Report type"></div>
+
+          <h3 class="builder-label">2. Scope</h3>
+          <div class="builder-scope" id="builderScope"><!-- injected: depends on report type --></div>
+
+          <h3 class="builder-label">3. Refine (optional)</h3>
+          <div class="builder-filters-grid">
+            <select id="rbSeverity" aria-label="Filter by severity">
+              <option value="all">Any severity</option>
+              <option>Low</option><option>Medium</option><option>High</option><option>Critical</option>
+            </select>
+            <select id="rbStatus" aria-label="Filter by status">
+              <option value="all">Any status</option>
+              <option>Reported</option><option>Under Review</option><option>Verified</option>
+              <option>Cleanup Planned</option><option>Cleanup In Progress</option><option>Resolved</option>
+            </select>
+            <select id="rbWasteType" aria-label="Filter by waste type">
+              <option value="all">Any waste type</option>
+            </select>
+            <select id="rbVerified" aria-label="Filter by verification">
+              <option value="all">Verified or not</option>
+              <option value="true">Verified only</option>
+              <option value="false">Unverified only</option>
+            </select>
+            <select id="rbSource" aria-label="Filter by source">
+              <option value="all">Any source</option>
+              <option value="Community Report">Community</option>
+              <option value="Public News">Public News</option>
+              <option value="Organisation">Organisation</option>
+              <option value="Municipality">Municipality</option>
+            </select>
+          </div>
+
+          <h3 class="builder-label">4. Include in report</h3>
+          <div class="content-checklist" id="contentChecklist">
+            <label><input type="checkbox" value="summary" checked> Executive summary</label>
+            <label><input type="checkbox" value="charts" checked> Charts</label>
+            <label><input type="checkbox" value="map" checked> Geographic distribution</label>
+            <label><input type="checkbox" value="list" checked> Incident list</label>
+            <label><input type="checkbox" value="descriptions"> Full descriptions</label>
+            <label><input type="checkbox" value="photos"> Photos</label>
+            <label><input type="checkbox" value="cleanup" checked> Cleanup &amp; resolution</label>
+            <label><input type="checkbox" value="timeline"> Timeline / trend</label>
+            <label><input type="checkbox" value="recommendations" checked> Recommendations</label>
+            <label><input type="checkbox" value="impact"> Environmental impact</label>
+            <label><input type="checkbox" value="aiInsights"> AI insights <em>(planned feature)</em></label>
+          </div>
+
+          <button class="btn btn-primary btn-lg" id="generateReportBtn" type="button">
+            <i data-lucide="file-down" aria-hidden="true"></i> Generate PDF report
+          </button>
+          <p class="hint" id="builderHint">Report generation reads directly from the reports currently loaded in the app — including any you've submitted yourself.</p>
+        </div>
+
+        <!-- Live preview -->
+        <aside class="builder-preview" id="builderPreview" aria-live="polite">
+          <!-- injected by reports.js -->
+        </aside>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ COMMUNITY IMPACT ============ -->
+  <section class="community-section">
+    <div class="section-inner community-inner">
+      <div>
+        <h2>Community impact</h2>
+        <p>Every report helps build a clearer picture of South Africa's waste problem — and a path towards fixing it.</p>
+        <ul class="impact-steps">
+          <li><i data-lucide="camera" aria-hidden="true"></i><span>You report it.</span></li>
+          <li><i data-lucide="badge-check" aria-hidden="true"></i><span>Someone verifies it.</span></li>
+          <li><i data-lucide="users" aria-hidden="true"></i><span>A community can act on it.</span></li>
+        </ul>
+      </div>
+      <div class="impact-actions">
+        <button class="impact-card" data-toast="✓ Report confirmed by another user">
+          <i data-lucide="check-circle" aria-hidden="true"></i>
+          <span>Confirm a report</span>
+        </button>
+        <button class="impact-card" data-toast="✓ Link copied — share this report">
+          <i data-lucide="share-2" aria-hidden="true"></i>
+          <span>Share a report</span>
+        </button>
+        <button class="impact-card" data-toast="✓ Update submitted for review">
+          <i data-lucide="message-square-plus" aria-hidden="true"></i>
+          <span>Report an update</span>
+        </button>
+        <button class="impact-card" data-toast="✓ Marked as resolved — thank you!">
+          <i data-lucide="sparkles" aria-hidden="true"></i>
+          <span>Mark cleanup complete</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ ABOUT ============ -->
+  <section class="about-section" id="about">
+    <div class="section-inner about-inner">
+      <h2>A cleaner South Africa starts with knowing where the problem is.</h2>
+      <p class="about-lead">CleanSA is a community exploration project. It aims to make litter and illegal dumping visible, so communities, volunteers and municipalities can prioritise where to act.</p>
+      <div class="about-grid">
+        <div class="about-item">
+          <i data-lucide="map-pinned" aria-hidden="true"></i>
+          <h4>Make litter visible</h4>
+          <p>Turn scattered problems into a shared map anyone can see.</p>
+        </div>
+        <div class="about-item">
+          <i data-lucide="megaphone" aria-hidden="true"></i>
+          <h4>Help communities report</h4>
+          <p>A quick, guided flow means reporting an issue takes minutes.</p>
+        </div>
+        <div class="about-item">
+          <i data-lucide="layers" aria-hidden="true"></i>
+          <h4>Aggregate information</h4>
+          <p>Community reports and public sources sit side by side, clearly labelled.</p>
+        </div>
+        <div class="about-item">
+          <i data-lucide="line-chart" aria-hidden="true"></i>
+          <h4>Track cleanup progress</h4>
+          <p>Every report moves through a visible lifecycle, from reported to resolved.</p>
+        </div>
+      </div>
+      <p class="about-disclaimer"><i data-lucide="shield-alert" aria-hidden="true"></i> This is a prototype. Statistics and sample reports are for demonstration only and do not represent verified real-world data.</p>
+    </div>
+  </section>
+
+</main>
+
+<!-- ============ FOOTER ============ -->
+<footer class="site-footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <span class="brand-name">Clean<span class="brand-accent">SA</span></span>
+      <p>Let's keep South Africa clean.</p>
+    </div>
+    <nav class="footer-links" aria-label="Footer">
+      <a href="#about">About</a>
+      <a href="#" id="footerReportLink">Report Litter</a>
+      <a href="#map-section">Explore Map</a>
+      <a href="#" data-toast="Privacy policy — coming soon">Privacy</a>
+      <a href="#" data-toast="Terms — coming soon">Terms</a>
+      <a href="#" data-toast="Contact — coming soon">Contact</a>
+    </nav>
+  </div>
+  <p class="footer-note">Prototype — community environmental reporting platform. Sample data is not verified real-world information.</p>
+</footer>
+
+<!-- ============ TOASTS ============ -->
+<div class="toast-container" id="toastContainer" aria-live="polite" aria-atomic="true"></div>
+
+<!-- ============ ROLES / ACCOUNTS STUB MODAL ============ -->
+<div class="modal-overlay" id="rolesModal" hidden>
+  <div class="modal modal-roles" role="dialog" aria-modal="true" aria-labelledby="rolesModalTitle">
+    <button class="modal-close" id="rolesCloseBtn" aria-label="Close">
+      <i data-lucide="x" aria-hidden="true"></i>
+    </button>
+    <span class="phase-badge">Planned — Phase 3</span>
+    <h2 id="rolesModalTitle">Accounts &amp; roles</h2>
+    <p>This prototype has no authentication — every visitor sees the same anonymous view, and submitted reports aren't attributed to anyone. Accounts are architected for, not built yet. The plan:</p>
+    <table class="roles-table">
+      <thead><tr><th>Role</th><th>Can do</th></tr></thead>
+      <tbody>
+        <tr><td>Citizen</td><td>Submit reports, confirm reports, follow incidents</td></tr>
+        <tr><td>Volunteer</td><td>Discover cleanup opportunities, upload before/after evidence</td></tr>
+        <tr><td>Organisation</td><td>Run cleanup campaigns, monitor assigned areas</td></tr>
+        <tr><td>Municipality</td><td>Review &amp; verify incidents, assign work, track response time</td></tr>
+        <tr><td>Administrator</td><td>Manage users, moderate data, oversee the platform</td></tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- ============ REPORT DETAILS MODAL ============ -->
+<div class="modal-overlay" id="detailsModal" hidden>
+  <div class="modal modal-details" role="dialog" aria-modal="true" aria-labelledby="detailsTitle">
+    <button class="modal-close" id="detailsCloseBtn" aria-label="Close">
+      <i data-lucide="x" aria-hidden="true"></i>
+    </button>
+    <div id="detailsContent"><!-- injected by JS --></div>
+  </div>
+</div>
+
+<!-- ============ REPORT LITTER MODAL (multi-step) ============ -->
+<div class="modal-overlay" id="reportModal" hidden>
+  <div class="modal modal-report" role="dialog" aria-modal="true" aria-labelledby="reportModalTitle">
+    <button class="modal-close" id="reportCloseBtn" aria-label="Close">
+      <i data-lucide="x" aria-hidden="true"></i>
+    </button>
+
+    <div class="report-form-header">
+      <h2 id="reportModalTitle">Report litter</h2>
+      <div class="step-indicator" id="stepIndicator">
+        <span class="step-dot active" data-step="1"></span>
+        <span class="step-dot" data-step="2"></span>
+        <span class="step-dot" data-step="3"></span>
+        <span class="step-dot" data-step="4"></span>
+        <span class="step-dot" data-step="5"></span>
+      </div>
+    </div>
+
+    <form id="reportForm" novalidate>
+
+      <!-- Step 1: Location -->
+      <fieldset class="form-step active" data-step="1">
+        <legend>Where is the problem?</legend>
+        <div class="location-options">
+          <button type="button" class="location-btn" id="useLocationBtn">
+            <i data-lucide="locate-fixed" aria-hidden="true"></i> Use my location
+          </button>
+          <button type="button" class="location-btn" id="dropPinBtn">
+            <i data-lucide="map-pin" aria-hidden="true"></i> Drop a pin
+          </button>
+        </div>
+        <label for="locationSearchInput">Search location</label>
+        <input type="text" id="locationSearchInput" placeholder="e.g. Soweto, Gauteng" />
+        <div id="pickMapWrap" class="pick-map-wrap" hidden>
+          <p class="hint">Click on the map to place your pin.</p>
+          <div id="pickMap"></div>
+        </div>
+        <div class="location-result" id="locationResult" hidden>
+          <i data-lucide="map-pin" aria-hidden="true"></i>
+          <div>
+            <strong id="locationResultName">—</strong>
+            <span id="locationResultCoords">—</span>
+          </div>
+        </div>
+        <p class="field-error" id="locationError" hidden>Please select a location before continuing.</p>
+      </fieldset>
+
+      <!-- Step 2: What did you find -->
+      <fieldset class="form-step" data-step="2">
+        <legend>What did you find?</legend>
+        <label for="reportTitle">Report title</label>
+        <input type="text" id="reportTitle" placeholder="e.g. Illegal dumping near community road" required />
+
+        <label for="reportDescription">Description</label>
+        <textarea id="reportDescription" rows="4" placeholder="Describe what you found…" required></textarea>
+
+        <label for="wasteType">Type of waste</label>
+        <select id="wasteType" required>
+          <option value="">Select a type…</option>
+          <option>Household waste</option>
+          <option>Plastic</option>
+          <option>Illegal dumping</option>
+          <option>Construction waste</option>
+          <option>Food waste</option>
+          <option>Electronic waste</option>
+          <option>Other</option>
+        </select>
+        <p class="field-error" id="detailsError" hidden>Please fill in a title, description and waste type.</p>
+      </fieldset>
+
+      <!-- Step 3: Severity -->
+      <fieldset class="form-step" data-step="3">
+        <legend>How serious is it?</legend>
+        <div class="severity-options" id="severityOptions">
+          <button type="button" class="severity-btn" data-value="Low">Low</button>
+          <button type="button" class="severity-btn" data-value="Medium">Medium</button>
+          <button type="button" class="severity-btn" data-value="High">High</button>
+          <button type="button" class="severity-btn" data-value="Critical">Critical</button>
+        </div>
+        <p class="field-error" id="severityError" hidden>Please choose a severity level.</p>
+      </fieldset>
+
+      <!-- Step 4: Photo -->
+      <fieldset class="form-step" data-step="4">
+        <legend>Add a photo</legend>
+        <div class="upload-area" id="uploadArea" tabindex="0" role="button" aria-label="Upload a photo">
+          <i data-lucide="camera" aria-hidden="true"></i>
+          <p><strong>Upload a photo</strong></p>
+          <p class="hint">Drag &amp; drop or browse</p>
+          <input type="file" id="photoInput" accept="image/*" hidden />
+        </div>
+        <div class="upload-preview" id="uploadPreview" hidden>
+          <img id="previewImg" alt="Preview of uploaded photo" />
+          <button type="button" class="btn btn-ghost btn-sm" id="removePhotoBtn">
+            <i data-lucide="trash-2" aria-hidden="true"></i> Remove
+          </button>
+        </div>
+        <p class="hint">Photo is optional for this prototype, but helps others understand the issue.</p>
+      </fieldset>
+
+      <!-- Step 5: Summary -->
+      <fieldset class="form-step" data-step="5">
+        <legend>Review &amp; submit</legend>
+        <div class="summary-card" id="summaryCard"><!-- injected --></div>
+      </fieldset>
+
+      <div class="form-nav">
+        <button type="button" class="btn btn-secondary" id="prevStepBtn" hidden>Back</button>
+        <button type="button" class="btn btn-primary" id="nextStepBtn">Continue</button>
+        <button type="submit" class="btn btn-primary" id="submitReportBtn" hidden>Submit report</button>
+      </div>
+    </form>
+
+    <div class="success-state" id="successState" hidden>
+      <i data-lucide="party-popper" aria-hidden="true"></i>
+      <h3>Thank you for helping keep South Africa clean! 🌱</h3>
+      <p>Your report has been added to the map.</p>
+      <button class="btn btn-primary" id="successCloseBtn">Done</button>
+    </div>
+  </div>
+</div>
+
+<script src="script.js" defer></script>
+<script src="reports.js" defer></script>
+<script src="analytics.js" defer></script>
+</body>
+</html>
