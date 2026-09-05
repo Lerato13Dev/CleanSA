@@ -14,7 +14,7 @@ Instead of stopping at a basic reporting form, I wanted to explore how this idea
 
 ### 👀 Want to see CleanSA without downloading anything?
 
-**👉 [View the Live Application](YOUR_LIVE_DEMO_LINK_HERE)**
+**👉 [View the Live Application](https://lerato13dev.github.io/CleanSA/)**
 
 You don't need to:
 
